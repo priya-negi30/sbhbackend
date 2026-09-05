@@ -1,0 +1,11 @@
+{
+  "remoteName": "origin",
+  "projects": [
+    {
+      "id": "prj_icAtOiQMc6wT3uQ40ql6UBD7eE0b",
+      "name": "sbh-api",
+      "directory": ".",
+      "orgId": "team_dv1LaAu2vvIW1oZrFVhNgzwn"
+    }
+  ]
+}
