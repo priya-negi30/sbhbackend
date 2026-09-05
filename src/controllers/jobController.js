@@ -1,5 +1,10 @@
 const { Job, JobApplication } = require('../models');
 const { toAbsoluteUrl } = require('../utils/helpers');
+const makeUploader = require('../middleware/upload');
+const { sendJobApplicationEmail } = require('../utils/mailer');
+
+// Instantiate the resume uploader helper instance (uploads to Vercel Blob under uploads/resumes/)
+const resumeUploader = makeUploader('resumes', { allowDocs: true });
 
 // Public: GET /api/jobs (only "open" by default; ?all=true for admin)
 exports.list = async (req, res, next) => {
@@ -64,6 +69,10 @@ exports.apply = async (req, res, next) => {
     if (!req.file) return res.status(400).json({ message: 'Resume file is required' });
 
     const body = req.body;
+
+    // Upload resume to Vercel Blob (uploads/resumes/...) and store the public URL
+    const resumeUrl = await resumeUploader.uploadToBlob(req.file);
+
     const application = await JobApplication.create({
       job_id: job.id,
       job_title: job.title,
@@ -79,8 +88,16 @@ exports.apply = async (req, res, next) => {
       email: body.email,
       qualification: body.qualification,
       notice_period: body.noticePeriod,
-      resume_path: `/uploads/resumes/${req.file.filename}`,
+      resume_path: resumeUrl,
     });
+
+    // Notify HR by email. Failure to send email should not fail the application
+    // submission itself, since the application is already safely stored in the DB.
+    try {
+      await sendJobApplicationEmail({ application: application.toJSON(), resumeUrl });
+    } catch (mailErr) {
+      console.error('Failed to send HR notification email:', mailErr.message);
+    }
 
     res.status(201).json({ message: 'Application submitted successfully', id: application.id });
   } catch (err) {

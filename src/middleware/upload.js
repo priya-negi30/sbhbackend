@@ -43,6 +43,14 @@ function makeUploader(folder, { allowDocs = false } = {}) {
   upload.uploadToBlob = async (file) => {
     if (!file) throw new Error('No file provided for upload.');
 
+    if (!process.env.BLOB_READ_WRITE_TOKEN) {
+      throw new Error(
+        'File upload is not configured: BLOB_READ_WRITE_TOKEN is missing. ' +
+          'Create a Blob store in your Vercel project (Storage tab), connect it to ' +
+          'this project, redeploy, and (for local dev) copy the token into your .env file.'
+      );
+    }
+
     const ext = path.extname(file.originalname);
     const base = path
       .basename(file.originalname, ext)
