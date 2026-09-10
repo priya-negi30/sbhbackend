@@ -22,7 +22,7 @@ exports.list = async (req, res, next) => {
     const where = req.query.all === 'true' ? {} : { status: 'active' };
     const doctors = await Doctor.findAll({
       where,
-      order: [['sort_order', 'ASC'], ['id', 'ASC']],
+      order: [['id', 'ASC']], //sort_order ['sort_order', 'ASC'],
     });
     res.json(doctors.map((d) => serialize(req, d)));
   } catch (err) {
